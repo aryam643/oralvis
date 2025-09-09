@@ -1,9 +1,9 @@
-OralVis Healthcare – Dental Image Analysis Platform
+##OralVis Healthcare – Dental Image Analysis Platform
 
 OralVis Healthcare is a full-stack application designed to make dental image management seamless. Built with the MERN stack, it enables patients to upload dental images, while healthcare providers can annotate, review, and generate detailed PDF reports. With secure role-based access, it’s tailored for both patients and practitioners.
 
 
-Key Features
+#Key Features
 	•	Patient Portal → Upload dental images with personal details
 	•	Admin Dashboard → Manage submissions and annotate images with advanced tools
 	•	Automated Reports → Generate treatment-ready PDF reports
@@ -12,7 +12,7 @@ Key Features
 	•	Cloud Storage → Secure storage of images and reports using Supabase
 
 
-Prerequisites
+#Prerequisites
 
 Before you begin, make sure you have:
 	•	Node.js v18+
@@ -21,7 +21,7 @@ Before you begin, make sure you have:
 	•	A Supabase account
 
 
-Getting Started (Local Setup)
+#Getting Started (Local Setup)
 
 1. Clone the Repository
 
@@ -65,7 +65,7 @@ yarn dev
 App will be available at http://localhost:3000
 
 
-Workflows
+##Workflows
 
 For Patients
 	1.	Register/Login
@@ -79,7 +79,7 @@ For Admins
 	3.	Annotate images using built-in tools
 	4.	Generate and share reports
 
-Project Structure
+#Project Structure
 
 oralvis-healthcare/
 ├── app/               # Next.js routes (admin, patient, auth, API)
@@ -97,18 +97,3 @@ Troubleshooting
 Enable debug mode by setting:
 
 NODE_ENV=development
-
-Deployment
-
-Deploying on Vercel
-	1.	Push your code to GitHub
-	2.	Connect repo to Vercel
-	3.	Add environment variables in Vercel dashboard
-	4.	Deploy 
-
-Production .env:
-
-NEXT_PUBLIC_SUPABASE_URL=your_production_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
