@@ -72,6 +72,7 @@ export default async function PatientDashboard() {
                 <Button variant="outline" size="sm" type="submit">
                   Sign Out
                 </Button>
+                <a href="/logout">Sign Out</a>
               </form>
             </div>
           </div>
