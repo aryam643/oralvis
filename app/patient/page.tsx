@@ -68,7 +68,7 @@ export default async function PatientDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">Welcome, {profile.name}</span>
-              <form action="/auth/login" method="post">
+              <form action="/logout" method="post">
                 <Button variant="outline" size="sm">
                   Sign Out
                 </Button>
