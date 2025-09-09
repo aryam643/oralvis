@@ -1,272 +1,114 @@
-# OralVis Healthcare - Dental Image Analysis Platform
+OralVis Healthcare – Dental Image Analysis Platform
 
-A comprehensive MERN stack application for dental image submission, annotation, and report generation with role-based access control.
+OralVis Healthcare is a full-stack application designed to make dental image management seamless. Built with the MERN stack, it enables patients to upload dental images, while healthcare providers can annotate, review, and generate detailed PDF reports. With secure role-based access, it’s tailored for both patients and practitioners.
 
-## 🚀 Features
 
-- **Patient Portal**: Upload dental images with patient details
-- **Admin Dashboard**: Review submissions with advanced annotation tools
-- **PDF Report Generation**: Automated dental reports with treatment recommendations
-- **Role-Based Authentication**: Secure access for patients and healthcare providers
-- **Image Annotation**: Canvas-based tools (rectangle, circle, arrow, freehand)
-- **File Storage**: Secure image and PDF storage with Supabase
+Key Features
+	•	Patient Portal → Upload dental images with personal details
+	•	Admin Dashboard → Manage submissions and annotate images with advanced tools
+	•	Automated Reports → Generate treatment-ready PDF reports
+	•	Secure Access Control → Role-based authentication for patients and admins
+	•	Interactive Annotation → Rectangle, circle, arrow, and freehand tools
+	•	Cloud Storage → Secure storage of images and reports using Supabase
 
-## 📋 Prerequisites
 
-Before running this application, ensure you have the following installed on your MacBook:
+Prerequisites
 
-- **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
-- **npm** or **yarn** package manager
-- **Git** - [Download here](https://git-scm.com/)
-- **Supabase Account** - [Sign up here](https://supabase.com/)
+Before you begin, make sure you have:
+	•	Node.js v18+
+	•	npm or yarn
+	•	Git
+	•	A Supabase account
 
-## 🛠️ Local Setup Instructions
 
-### 1. Clone the Repository
+Getting Started (Local Setup)
 
-\`\`\`bash
-# Clone the repository
+1. Clone the Repository
+
 git clone <your-repo-url>
 cd oralvis-healthcare
 
-# Or download and extract the ZIP file
-\`\`\`
+2. Install Dependencies
 
-### 2. Install Dependencies
-
-\`\`\`bash
-# Install all dependencies
 npm install
-
-# Or using yarn
+# or
 yarn install
-\`\`\`
 
-### 3. Environment Variables Setup
+3. Configure Environment Variables
 
-Create a `.env.local` file in the root directory:
+Copy the example file:
 
-\`\`\`bash
 cp .env.example .env.local
-\`\`\`
 
-Add the following environment variables to `.env.local`:
+Then add your Supabase credentials and site details:
 
-\`\`\`env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-
-# Site Configuration
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-\`\`\`
 
-### 4. Supabase Database Setup
+4. Database Setup
+	•	Run migration scripts in scripts/ using Supabase SQL Editor OR
+	•	Use the Supabase CLI:
 
-#### 4.1 Create Supabase Project
-1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
-2. Click "New Project"
-3. Fill in project details and create
-
-#### 4.2 Get API Keys
-1. Go to Project Settings → API
-2. Copy the Project URL and anon public key
-3. Copy the service_role secret key
-
-#### 4.3 Run Database Migrations
-1. Go to Supabase Dashboard → SQL Editor
-2. Run the contents of `scripts/001_create_tables.sql`
-3. Run the contents of `scripts/002_create_storage.sql`
-
-Or use the Supabase CLI:
-\`\`\`bash
-# Install Supabase CLI
 npm install -g supabase
-
-# Login to Supabase
 supabase login
-
-# Link your project
-supabase link --project-ref your-project-ref
-
-# Run migrations
+supabase link --project-ref <your-project-ref>
 supabase db push
-\`\`\`
 
-### 5. Configure Authentication
+5. Start Development Server
 
-#### 5.1 Email Templates (Optional)
-1. Go to Authentication → Email Templates
-2. Customize signup confirmation and password reset templates
-
-#### 5.2 URL Configuration
-1. Go to Authentication → URL Configuration
-2. Add `http://localhost:3000` to Site URL
-3. Add `http://localhost:3000/**` to Redirect URLs
-
-### 6. Storage Setup
-
-#### 6.1 Create Storage Buckets
-The SQL scripts will create the necessary storage buckets:
-- `dental-images` - For original uploaded images
-- `annotated-images` - For processed annotated images
-- `reports` - For generated PDF reports
-
-#### 6.2 Configure Storage Policies
-Storage policies are automatically created via the SQL scripts to ensure:
-- Patients can only access their own files
-- Admins can access all files
-- Proper RLS (Row Level Security) enforcement
-
-### 7. Run the Application
-
-\`\`\`bash
-# Start the development server
 npm run dev
-
-# Or using yarn
+# or
 yarn dev
-\`\`\`
 
-The application will be available at: `http://localhost:3000`
+App will be available at http://localhost:3000
 
-## 👥 Test Accounts
 
-### Creating Test Accounts
+Workflows
 
-#### Patient Account
-1. Go to `http://localhost:3000/auth/register`
-2. Fill in details:
-   - Email: `patient@test.com`
-   - Password: `password123`
-   - Role: `Patient`
-   - Name: `John Doe`
-   - Patient ID: `P001`
+For Patients
+	1.	Register/Login
+	2.	Upload dental images
+	3.	Track submissions
+	4.	Download reports when ready
 
-#### Admin Account
-1. Go to `http://localhost:3000/auth/register`
-2. Fill in details:
-   - Email: `admin@test.com`
-   - Password: `password123`
-   - Role: `Admin`
-   - Name: `Dr. Smith`
+For Admins
+	1.	Login
+	2.	View dashboard and submissions
+	3.	Annotate images using built-in tools
+	4.	Generate and share reports
 
-### Manual Database Setup (Alternative)
-If you prefer to create test accounts directly in the database:
+Project Structure
 
-\`\`\`sql
--- Insert test users (run in Supabase SQL Editor)
-INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at)
-VALUES 
-  ('patient-uuid', 'patient@test.com', crypt('password123', gen_salt('bf')), now(), now(), now()),
-  ('admin-uuid', 'admin@test.com', crypt('password123', gen_salt('bf')), now(), now(), now());
-
--- Insert user profiles
-INSERT INTO public.users (id, email, role, name, patient_id)
-VALUES 
-  ('patient-uuid', 'patient@test.com', 'patient', 'John Doe', 'P001'),
-  ('admin-uuid', 'admin@test.com', 'admin', 'Dr. Smith', NULL);
-\`\`\`
-
-## 🔧 Development Workflow
-
-### Patient Workflow
-1. **Register/Login** → `http://localhost:3000/auth/login`
-2. **Upload Images** → `http://localhost:3000/patient/upload`
-3. **View Submissions** → `http://localhost:3000/patient`
-4. **Download Reports** → Available when admin generates reports
-
-### Admin Workflow
-1. **Login** → `http://localhost:3000/auth/login`
-2. **View Dashboard** → `http://localhost:3000/admin`
-3. **Review Submissions** → Click on any submission
-4. **Annotate Images** → Use annotation tools on submission detail page
-5. **Generate Reports** → Click "Generate Report" after annotation
-
-## 📁 Project Structure
-
-\`\`\`
 oralvis-healthcare/
-├── app/                          # Next.js App Router
-│   ├── admin/                    # Admin dashboard pages
-│   ├── auth/                     # Authentication pages
-│   ├── patient/                  # Patient portal pages
-│   └── api/                      # API routes
-├── components/                   # Reusable React components
-├── lib/                         # Utility libraries
-│   └── supabase/                # Supabase client configuration
-├── scripts/                     # Database migration scripts
-└── public/                      # Static assets
-\`\`\`
+├── app/               # Next.js routes (admin, patient, auth, API)
+├── components/        # Reusable React components
+├── lib/supabase/      # Supabase configuration
+├── scripts/           # Database migrations
+└── public/            # Static assets
 
-## 🐛 Troubleshooting
+Troubleshooting
+	•	Supabase connection issues → Check .env.local variables
+	•	File upload errors → Verify storage policies & bucket permissions
+	•	Auth issues → Check redirect URLs and email confirmation settings
+	•	PDF generation fails → Ensure patient data + images are available
 
-### Common Issues
+Enable debug mode by setting:
 
-#### 1. Supabase Connection Error
-- Verify environment variables are correct
-- Check if Supabase project is active
-- Ensure API keys have proper permissions
-
-#### 2. File Upload Issues
-- Check storage bucket permissions
-- Verify RLS policies are correctly set
-- Ensure file size limits are appropriate
-
-#### 3. Authentication Problems
-- Verify email confirmation settings
-- Check redirect URL configuration
-- Ensure user roles are properly set
-
-#### 4. PDF Generation Fails
-- Check if all required patient data is present
-- Verify image URLs are accessible
-- Ensure proper permissions for report generation
-
-### Debug Mode
-Add debug logging by setting:
-\`\`\`env
 NODE_ENV=development
-\`\`\`
 
-## 📚 API Documentation
+Deployment
 
-See `API_DOCUMENTATION.md` for detailed API endpoints and usage examples.
+Deploying on Vercel
+	1.	Push your code to GitHub
+	2.	Connect repo to Vercel
+	3.	Add environment variables in Vercel dashboard
+	4.	Deploy 
 
-## 🚀 Deployment
+Production .env:
 
-### Vercel Deployment
-1. Push code to GitHub
-2. Connect repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy
-
-### Environment Variables for Production
-\`\`\`env
-NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
+NEXT_PUBLIC_SUPABASE_URL=your_production_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
 NEXT_PUBLIC_SITE_URL=https://your-domain.com
-\`\`\`
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-## 📞 Support
-
-For issues and questions:
-- Create an issue in the GitHub repository
-- Contact: support@oralvis.com
-
----
-
-**Note**: This application is for educational/demonstration purposes. For production use in healthcare, ensure compliance with HIPAA and other relevant regulations.
