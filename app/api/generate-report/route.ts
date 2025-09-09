@@ -132,6 +132,47 @@ export async function POST(request: NextRequest) {
       yPosition += 40
     }
 
+    // Annotated Image Section
+    if (submission.annotated_image_url) {
+      checkNewPage(120)
+      yPosition = addSectionHeader("Annotated Image", yPosition)
+
+      try {
+        const res = await fetch(submission.annotated_image_url)
+        if (res.ok) {
+          const contentType = res.headers.get('content-type') || 'image/png'
+          const imgFormat = contentType.includes('jpeg') || contentType.includes('jpg') ? 'JPEG' : 'PNG'
+          const arrayBuffer = await res.arrayBuffer()
+          const base64 = Buffer.from(arrayBuffer).toString('base64')
+          const dataUrl = `data:${contentType};base64,${base64}`
+
+          const maxImgWidth = contentWidth
+          const maxImgHeight = 160
+
+          let drawWidth = maxImgWidth
+          let drawHeight = maxImgHeight
+
+          checkNewPage(drawHeight + 30)
+
+          doc.setFillColor(248, 250, 252)
+          doc.roundedRect(margin, yPosition, contentWidth, drawHeight + 12, 3, 3, 'F')
+
+          doc.addImage(dataUrl, imgFormat as any, margin + 6, yPosition + 6, drawWidth - 12, drawHeight - 12)
+          yPosition += drawHeight + 20
+
+          // Caption
+          doc.setFontSize(10)
+          doc.setTextColor(100, 100, 100)
+          doc.setFont('helvetica', 'italic')
+          doc.text("Doctor-annotated reference image", margin, yPosition)
+          yPosition += 10
+        }
+      } catch (e) {
+        // If image fails to load, continue without blocking report generation
+        console.warn('Failed to embed annotated image:', e)
+      }
+    }
+
     // Screening Results Section
     checkNewPage(60)
     yPosition = addSectionHeader("Screening Results", yPosition)
@@ -255,7 +296,6 @@ export async function POST(request: NextRequest) {
       throw uploadError
     }
 
-    // Get public URL
     const {
       data: { publicUrl },
     } = supabase.storage.from("dental-images").getPublicUrl(fileName)
