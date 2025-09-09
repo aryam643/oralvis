@@ -12,7 +12,7 @@ async function handleSignOut() {
   }
 
   return NextResponse.redirect(
-    new URL("/", "https://oralvis-two.vercel.app/")
+    new URL("/", process.env.NEXT_PUBLIC_SITE_URL || "https://oralvis-two.vercel.app/")
   )
 }
 export async function GET() {
