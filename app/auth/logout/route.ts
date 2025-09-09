@@ -7,8 +7,8 @@ export async function POST() {
   const { error } = await supabase.auth.signOut()
 
   if (error) {
-    return NextResponse.redirect(new URL("/auth/error", process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"))
+    return NextResponse.redirect(new URL("/auth/error", process.env.NEXT_PUBLIC_SITE_URL || "https://oralvis-two.vercel.app/"))
   }
 
-  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"))
+  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_SITE_URL || "https://oralvis-two.vercel.app/"))
 }
