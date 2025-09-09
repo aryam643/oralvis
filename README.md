@@ -1,9 +1,10 @@
-##OralVis Healthcare – Dental Image Analysis Platform
+🦷 OralVis Healthcare – Dental Image Analysis Platform
 
-OralVis Healthcare is a full-stack application designed to make dental image management seamless. Built with the MERN stack, it enables patients to upload dental images, while healthcare providers can annotate, review, and generate detailed PDF reports. With secure role-based access, it’s tailored for both patients and practitioners.
+OralVis Healthcare is a full-stack application designed to simplify dental image management. Built with the MERN stack, it enables patients to upload dental images, while healthcare providers can annotate, review, and generate detailed PDF reports. With secure role-based access, it’s tailored for both patients and practitioners.
 
+⸻
 
-#Key Features
+✨ Key Features
 	•	Patient Portal → Upload dental images with personal details
 	•	Admin Dashboard → Manage submissions and annotate images with advanced tools
 	•	Automated Reports → Generate treatment-ready PDF reports
@@ -11,17 +12,19 @@ OralVis Healthcare is a full-stack application designed to make dental image man
 	•	Interactive Annotation → Rectangle, circle, arrow, and freehand tools
 	•	Cloud Storage → Secure storage of images and reports using Supabase
 
+⸻
 
-#Prerequisites
+📦 Prerequisites
 
-Before you begin, make sure you have:
+Before you begin, make sure you have installed:
 	•	Node.js v18+
 	•	npm or yarn
 	•	Git
 	•	A Supabase account
 
+⸻
 
-#Getting Started (Local Setup)
+⚡ Getting Started (Local Setup)
 
 1. Clone the Repository
 
@@ -40,7 +43,7 @@ Copy the example file:
 
 cp .env.example .env.local
 
-Then add your Supabase credentials and site details:
+Update .env.local with your Supabase credentials:
 
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -48,7 +51,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 4. Database Setup
-	•	Run migration scripts in scripts/ using Supabase SQL Editor OR
+	•	Run migration scripts in the scripts/ folder via Supabase SQL Editor OR
 	•	Use the Supabase CLI:
 
 npm install -g supabase
@@ -62,24 +65,34 @@ npm run dev
 # or
 yarn dev
 
-App will be available at http://localhost:3000
+👉 App will be available at http://localhost:3000
 
+⸻
 
-##Workflows
+👩‍⚕️ Workflows
 
 For Patients
-	1.	Register/Login
-	2.	Upload dental images
-	3.	Track submissions
-	4.	Download reports when ready
+	1.	Register/Login with your own email
+	2.	Verify your email after registration
+	3.	Upload dental images
+	4.	Track submissions
+	5.	Download reports when ready
 
-For Admins
-	1.	Login
+For Admins (Doctor)
+
+Use the following test credentials to log in as a doctor/admin:
+
+Email: doctor@oralvis.com  
+Password: Doctor@123456
+
+	1.	Login with the above credentials
 	2.	View dashboard and submissions
 	3.	Annotate images using built-in tools
 	4.	Generate and share reports
 
-#Project Structure
+⸻
+
+📂 Project Structure
 
 oralvis-healthcare/
 ├── app/               # Next.js routes (admin, patient, auth, API)
@@ -88,7 +101,10 @@ oralvis-healthcare/
 ├── scripts/           # Database migrations
 └── public/            # Static assets
 
-Troubleshooting
+
+⸻
+
+🐛 Troubleshooting
 	•	Supabase connection issues → Check .env.local variables
 	•	File upload errors → Verify storage policies & bucket permissions
 	•	Auth issues → Check redirect URLs and email confirmation settings
