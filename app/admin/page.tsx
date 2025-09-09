@@ -78,7 +78,7 @@ export default async function AdminDashboard() {
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">Welcome, Dr. {profile.name}</span>
-              <form action="/auth/logout" method="post">
+              <form action="/logout" method="post">
                 <Button variant="outline" size="sm">
                   Sign Out
                 </Button>
