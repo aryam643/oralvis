@@ -59,7 +59,7 @@ Register new user account.
 }
 \`\`\`
 
-#### POST /logout
+#### POST /auth/logout
 Logout current user session.
 
 ### Submissions
