@@ -86,11 +86,11 @@ export default function PatientDashboard({ initialSubmissions, initialProfile }:
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600">Welcome, {profile?.name}</span>
-              <form action="/auth/logout" method="post">
-                <Button variant="outline" size="sm" type="submit">
+              <a href="/auth/logout">
+                <Button variant="outline" size="sm">
                   Sign Out
                 </Button>
-              </form>
+              </a>
             </div>
           </div>
         </div>
