@@ -288,7 +288,7 @@ export default function GenerateReportPage() {
               <div className="flex gap-4">
                 <Button
                   onClick={generateReport}
-                  disabled={isGenerating || selectedConditions.length === 0}
+                  disabled={isGenerating}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   {isGenerating ? (
@@ -359,9 +359,9 @@ export default function GenerateReportPage() {
                   </AlertDialog>
                 )}
               </div>
-              {selectedConditions.length === 0 && (
-                <p className="text-sm text-gray-600 mt-2">Please select at least one condition to generate a report.</p>
-              )}
+              <p className="text-sm text-gray-600 mt-2">
+                Tip: Conditions in the PDF are derived from your annotation labels. Selecting here is optional.
+              </p>
             </CardContent>
           </Card>
         </div>

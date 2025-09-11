@@ -21,8 +21,9 @@ export default function UploadPage() {
     patientId: "",
     note: "",
   })
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  // Up to three optional images: upper, front, lower
+  const [files, setFiles] = useState<{ upper?: File; front?: File; lower?: File }>({})
+  const [previews, setPreviews] = useState<{ upper?: string; front?: string; lower?: string }>({})
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -32,7 +33,7 @@ export default function UploadPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (slot: 'upper' | 'front' | 'lower') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       // Validate file type
@@ -47,19 +48,19 @@ export default function UploadPage() {
         return
       }
 
-      setSelectedFile(file)
+      setFiles((prev) => ({ ...prev, [slot]: file }))
       setError(null)
 
-      // Create preview URL
       const url = URL.createObjectURL(file)
-      setPreviewUrl(url)
+      setPreviews((prev) => ({ ...prev, [slot]: url }))
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedFile) {
-      setError("Please select an image file")
+    const hasAny = Boolean(files.upper || files.front || files.lower)
+    if (!hasAny) {
+      setError("Please select at least one image file")
       return
     }
 
@@ -77,29 +78,31 @@ export default function UploadPage() {
         throw new Error("Not authenticated")
       }
 
-      // Upload image to Supabase Storage
-      const fileExt = selectedFile.name.split(".").pop()
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`
+      // Upload up to three images and collect their public URLs
+      const images: Record<string, string> = {}
+      for (const slot of ["upper", "front", "lower"] as const) {
+        const f = files[slot]
+        if (!f) continue
+        const ext = f.name.split('.').pop()
+        const filePath = `${user.id}/${Date.now()}-${slot}.${ext}`
+        const { error: upErr } = await supabase.storage.from('dental-images').upload(filePath, f)
+        if (upErr) throw upErr
+        const { data: { publicUrl } } = supabase.storage.from('dental-images').getPublicUrl(filePath)
+        images[slot] = publicUrl
+      }
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("dental-images")
-        .upload(fileName, selectedFile)
+      // Choose a primary original_image_url for backward compatibility
+      const primaryUrl = images.upper || images.front || images.lower || ''
 
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("dental-images").getPublicUrl(fileName)
-
-      // Create submission record
+      // Create submission record, seed annotation_data with image map
       const { error: insertError } = await supabase.from("submissions").insert({
         patient_id: user.id,
         name: formData.name,
         email: formData.email,
         patient_identifier: formData.patientId,
         note: formData.note,
-        original_image_url: publicUrl,
+        original_image_url: primaryUrl,
+        annotation_data: JSON.stringify({ images, annotations: {} }),
         status: "uploaded",
       })
 
@@ -198,52 +201,32 @@ export default function UploadPage() {
               </div>
 
               <div className="space-y-4">
-                <Label htmlFor="image">Upload Dental Image *</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                  {previewUrl ? (
-                    <div className="space-y-4">
-                      <div className="relative w-full max-w-md mx-auto">
-                        <Image
-                          src={previewUrl || "/placeholder.svg"}
-                          alt="Preview"
-                          width={400}
-                          height={300}
-                          className="rounded-lg object-cover"
-                        />
+                <Label>Upload Dental Images (up to 3)</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {(["upper","front","lower"] as const).map((slot) => (
+                    <div key={slot} className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-blue-400 transition-colors">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium capitalize">{slot} teeth</p>
+                        {previews[slot] ? (
+                          <div className="space-y-2">
+                            <Image src={previews[slot] || "/placeholder.svg"} alt={`${slot} preview`} width={220} height={160} className="rounded-lg object-cover mx-auto"/>
+                            <Button type="button" variant="outline" onClick={() => { setFiles((p)=>({ ...p, [slot]: undefined })); setPreviews((p)=>({ ...p, [slot]: undefined })); }}>
+                              Change
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto" />
+                            <Input id={`image-${slot}`} type="file" accept="image/*" onChange={handleFileChange(slot)} className="hidden" />
+                            <Button type="button" variant="outline" onClick={() => document.getElementById(`image-${slot}`)?.click()}>
+                              <Upload className="w-4 h-4 mr-2" />
+                              Choose File
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600">{selectedFile?.name}</p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedFile(null)
-                          setPreviewUrl(null)
-                        }}
-                      >
-                        Change Image
-                      </Button>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <ImageIcon className="w-12 h-12 text-gray-400 mx-auto" />
-                      <div>
-                        <p className="text-lg font-medium text-gray-600">Upload your dental image</p>
-                        <p className="text-sm text-gray-500">PNG, JPG, JPEG up to 10MB</p>
-                      </div>
-                      <Input
-                        id="image"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                        required
-                      />
-                      <Button type="button" variant="outline" onClick={() => document.getElementById("image")?.click()}>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Choose File
-                      </Button>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
 
@@ -254,7 +237,7 @@ export default function UploadPage() {
               )}
 
               <div className="flex gap-4">
-                <Button type="submit" disabled={isLoading || !selectedFile} className="bg-blue-600 hover:bg-blue-700">
+                <Button type="submit" disabled={isLoading || (!files.upper && !files.front && !files.lower)} className="bg-blue-600 hover:bg-blue-700">
                   {isLoading ? "Uploading..." : "Submit for Analysis"}
                 </Button>
                 <Button type="button" variant="outline" asChild>

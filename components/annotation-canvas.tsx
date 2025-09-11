@@ -20,6 +20,7 @@ interface Annotation {
   points: Point[]
   color: string
   strokeWidth: number
+  labelId?: string
 }
 
 interface AnnotationCanvasProps {
@@ -29,6 +30,16 @@ interface AnnotationCanvasProps {
 }
 
 const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899"]
+const CONDITION_OPTIONS = [
+  { id: "inflamed_gums", label: "Inflamed / Red gums" },
+  { id: "malaligned", label: "Malaligned teeth" },
+  { id: "receded_gums", label: "Receded gums" },
+  { id: "stains", label: "Stains" },
+  { id: "attrition", label: "Attrition" },
+  { id: "crowns", label: "Crowns" },
+  { id: "cavities", label: "Cavities" },
+  { id: "plaque", label: "Plaque" },
+]
 
 export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnotations }: AnnotationCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -36,6 +47,7 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
   const [currentTool, setCurrentTool] = useState<"rectangle" | "circle" | "arrow" | "freehand">("rectangle")
   const [currentColor, setCurrentColor] = useState("#ef4444")
   const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [annotationsByImage, setAnnotationsByImage] = useState<Record<string, Annotation[]>>({})
   const [history, setHistory] = useState<Annotation[][]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [startPoint, setStartPoint] = useState<Point | null>(null)
@@ -43,6 +55,10 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
   const [image, setImage] = useState<HTMLImageElement | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaved, setIsSaved] = useState(true)
+  const [imagesMap, setImagesMap] = useState<Record<string, string>>({})
+  const [currentImageKey, setCurrentImageKey] = useState<'upper' | 'front' | 'lower' | 'primary'>('primary')
+  const [currentLabel, setCurrentLabel] = useState<string>('stains')
+  const [annotatedImagesMap, setAnnotatedImagesMap] = useState<Record<string, string>>({})
 
   // Load image
   useEffect(() => {
@@ -72,6 +88,39 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
           setAnnotations(parsed)
           setHistory([parsed])
           setHistoryIndex(0)
+        } else if (parsed && typeof parsed === 'object') {
+          const imgs = parsed.images || { primary: imageUrl }
+          setImagesMap(imgs)
+          const firstKey = (['upper','front','lower','primary'] as const).find(k => imgs[k]) || 'primary'
+          setCurrentImageKey(firstKey as any)
+          const byImg: Record<string, Annotation[]> = parsed.annotations || {}
+          setAnnotationsByImage(byImg)
+          const initial = byImg[firstKey as string] || []
+          setAnnotations(initial)
+          setHistory([initial])
+          setHistoryIndex(0)
+          const annImgs: Record<string, string> = parsed.annotated_images || {}
+          setAnnotatedImagesMap(annImgs)
+
+          // Ensure canvas shows the first available image
+          const src = imgs[firstKey as string] || imageUrl
+          if (src) {
+            const img = new Image()
+            img.crossOrigin = "anonymous"
+            img.onload = () => {
+              setImage(img)
+              if (canvasRef.current) {
+                const canvas = canvasRef.current
+                const ctx = canvas.getContext("2d")
+                if (ctx) {
+                  canvas.width = img.width
+                  canvas.height = img.height
+                  ctx.drawImage(img, 0, 0)
+                }
+              }
+            }
+            img.src = src
+          }
         }
       } catch (error) {
         console.error("Failed to parse existing annotations:", error)
@@ -243,10 +292,12 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
       points: currentTool === "freehand" ? [...currentPath, pos] : [startPoint, pos],
       color: currentColor,
       strokeWidth: 3,
+      labelId: currentLabel,
     }
 
     const newAnnotations = [...annotations, newAnnotation]
     setAnnotations(newAnnotations)
+    setAnnotationsByImage((prev) => ({ ...prev, [currentImageKey]: newAnnotations }))
 
     // Update history
     const newHistory = history.slice(0, historyIndex + 1)
@@ -296,7 +347,7 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
         const response = await fetch(dataUrl)
         const blob = await response.blob()
 
-        const fileName = `annotated/${submissionId}/${Date.now()}.png`
+        const fileName = `annotated/${submissionId}/${currentImageKey}-${Date.now()}.png`
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("dental-images")
           .upload(fileName, blob)
@@ -307,11 +358,17 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
           data: { publicUrl },
         } = supabase.storage.from("dental-images").getPublicUrl(fileName)
 
+        const nextData = {
+          images: Object.keys(imagesMap).length ? imagesMap : { primary: imageUrl },
+          annotations: { ...annotationsByImage, [currentImageKey]: annotations },
+          annotated_images: { ...annotatedImagesMap, [currentImageKey]: publicUrl },
+        }
+
         // Update submission with annotations
         const { error: updateError } = await supabase
           .from("submissions")
           .update({
-            annotation_data: JSON.stringify(annotations),
+            annotation_data: JSON.stringify(nextData),
             annotated_image_url: publicUrl,
             status: "annotated",
             updated_at: new Date().toISOString(),
@@ -319,6 +376,9 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
           .eq("id", submissionId)
 
         if (updateError) throw updateError
+
+        // Update local annotated map
+        setAnnotatedImagesMap((prev) => ({ ...prev, [currentImageKey]: publicUrl }))
 
         setIsSaved(true)
       }
@@ -344,6 +404,45 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap items-center gap-4">
+            {/* Image Slot Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Image:</span>
+              {(["upper","front","lower","primary"] as const)
+                .filter((k) => imagesMap[k])
+                .map((key) => (
+                  <Button
+                    key={key}
+                    variant={currentImageKey === key ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setCurrentImageKey(key)
+                      const src = imagesMap[key]
+                      if (!src) return
+                      const img = new Image()
+                      img.crossOrigin = "anonymous"
+                      img.onload = () => {
+                        setImage(img)
+                        if (canvasRef.current) {
+                          const canvas = canvasRef.current
+                          const ctx = canvas.getContext("2d")
+                          if (ctx) {
+                            canvas.width = img.width
+                            canvas.height = img.height
+                            ctx.drawImage(img, 0, 0)
+                          }
+                        }
+                      }
+                      img.src = src
+                      const next = annotationsByImage[key] || []
+                      setAnnotations(next)
+                      setHistory([next])
+                      setHistoryIndex(0)
+                    }}
+                  >
+                    {key === 'primary' ? 'Image' : key.charAt(0).toUpperCase() + key.slice(1)}
+                  </Button>
+                ))}
+            </div>
             {/* Drawing Tools */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Tools:</span>
@@ -390,6 +489,20 @@ export default function AnnotationCanvas({ imageUrl, submissionId, existingAnnot
                   onClick={() => setCurrentColor(color)}
                 />
               ))}
+            </div>
+
+            {/* Clinical Label */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Regarding:</span>
+              <select
+                className="border rounded-md text-sm px-2 py-1"
+                value={currentLabel}
+                onChange={(e) => setCurrentLabel(e.target.value)}
+              >
+                {CONDITION_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                ))}
+              </select>
             </div>
 
             {/* Actions */}
